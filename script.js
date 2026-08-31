@@ -1262,4 +1262,35 @@ window.scoutProducts = upgradedScoutProducts;
 
   document.head.appendChild(style);
 
+/* =========================================================
+   PROFITSCOUT - PRODUCT SEARCH LINKS
+   ========================================================= */
+
+(function () {
+  "use strict";
+
+  window.profitScoutSearch = function (store, productName) {
+    if (!productName) return;
+
+    const query = encodeURIComponent(productName);
+    let url = "";
+
+    if (store === "amazon") {
+      url = "https://www.amazon.com/s?k=" + query;
+    }
+
+    if (store === "ebay") {
+      url = "https://www.ebay.com/sch/i.html?_nkw=" + query;
+    }
+
+    if (store === "walmart") {
+      url = "https://www.walmart.com/search?q=" + query;
+    }
+
+    if (url) {
+      window.open(url, "_blank");
+    }
+  };
+
+})();
 })();
