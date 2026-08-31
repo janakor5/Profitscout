@@ -1,1376 +1,972 @@
-/* =========================================================
-   PROFITSCOUT - MAIN JAVASCRIPT
-   ========================================================= */
-
-/* ---------- PRODUCT DATA ---------- */
-
-const products = [
-  {
-    name: "Reusable Silicone Food Storage Bags",
-    categories: ["kitchen", "home", "storage"],
-    buy: 3.50,
-    sell: 16.99,
-    demand: 90,
-    competition: "Medium"
-  },
-  {
-    name: "Bamboo Drawer Organizer",
-    categories: ["kitchen", "home", "organization", "storage"],
-    buy: 5.00,
-    sell: 19.99,
-    demand: 86,
-    competition: "Medium"
-  },
-  {
-    name: "Electric Milk Frother",
-    categories: ["kitchen", "coffee", "home"],
-    buy: 4.00,
-    sell: 17.99,
-    demand: 84,
-    competition: "Medium"
-  },
-  {
-    name: "Kitchen Sink Organizer",
-    categories: ["kitchen", "home", "organization"],
-    buy: 4.50,
-    sell: 18.99,
-    demand: 82,
-    competition: "Medium"
-  },
-  {
-    name: "Silicone Air Fryer Liners",
-    categories: ["kitchen", "cooking", "home"],
-    buy: 2.50,
-    sell: 14.99,
-    demand: 88,
-    competition: "High"
-  },
-  {
-    name: "Resistance Bands Set",
-    categories: ["fitness", "exercise", "sports"],
-    buy: 6.00,
-    sell: 24.99,
-    demand: 91,
-    competition: "High"
-  },
-  {
-    name: "Adjustable Phone Stand",
-    categories: ["electronics", "office", "phone"],
-    buy: 3.00,
-    sell: 15.99,
-    demand: 85,
-    competition: "High"
-  },
-  {
-    name: "LED Closet Lights",
-    categories: ["home", "lighting", "organization"],
-    buy: 4.00,
-    sell: 19.99,
-    demand: 87,
-    competition: "Medium"
-  },
-  {
-    name: "Pet Grooming Brush",
-    categories: ["pets", "pet", "animals"],
-    buy: 3.00,
-    sell: 14.99,
-    demand: 83,
-    competition: "Medium"
-  },
-  {
-    name: "Dog Car Seat Cover",
-    categories: ["pets", "pet", "dogs", "auto"],
-    buy: 8.00,
-    sell: 29.99,
-    demand: 81,
-    competition: "Medium"
-  },
-  {
-    name: "Kids Drawing Tablet",
-    categories: ["kids", "toys", "children", "electronics"],
-    buy: 8.00,
-    sell: 29.99,
-    demand: 89,
-    competition: "High"
-  },
-  {
-    name: "Magnetic Building Blocks",
-    categories: ["kids", "toys", "children"],
-    buy: 7.00,
-    sell: 27.99,
-    demand: 86,
-    competition: "Medium"
-  },
-  {
-    name: "Car Phone Mount",
-    categories: ["auto", "car", "electronics", "phone"],
-    buy: 4.00,
-    sell: 18.99,
-    demand: 88,
-    competition: "High"
-  },
-  {
-    name: "Trunk Organizer",
-    categories: ["auto", "car", "organization"],
-    buy: 7.00,
-    sell: 24.99,
-    demand: 84,
-    competition: "Medium"
-  },
-  {
-    name: "Travel Packing Cubes",
-    categories: ["travel", "storage", "organization"],
-    buy: 6.00,
-    sell: 22.99,
-    demand: 82,
-    competition: "Medium"
-  }
-];
-
-
-/* ---------- HELPER FUNCTIONS ---------- */
-
-function money(value) {
-  return "$" + Number(value).toFixed(2);
-}
-
-function calculateProfit(buy, sell) {
-  return sell - buy;
-}
-
-function calculateMargin(buy, sell) {
-  if (sell <= 0) return 0;
-  return ((sell - buy) / sell) * 100;
-}
-
-
-/* ---------- MAIN SCOUT FUNCTION ---------- */
-
-function scoutProducts() {
-
-  const input = document.getElementById("category");
-  const results = document.getElementById("results");
-
-  if (!input || !results) {
-    console.error("ProfitScout: category or results element not found.");
-    return;
-  }
-
-  const category = input.value.trim().toLowerCase();
-
-  if (!category) {
-    results.innerHTML = `
-      <div class="result-card">
-        <h3>Enter a product category</h3>
-        <p>
-          Try something like <strong>kitchen</strong>,
-          <strong>toys</strong>, <strong>fitness</strong>,
-          <strong>pets</strong>, or <strong>home</strong>.
-        </p>
-      </div>
-    `;
-
-    results.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-
-    return;
-  }
-
-
-  /* Find matching products */
-
-  let matches = products.filter(product => {
-
-    const searchableText =
-      product.name.toLowerCase() +
-      " " +
-      product.categories.join(" ");
-
-    return searchableText.includes(category);
-  });
-
-
-  /* If no exact matches, show general opportunities */
-
-  if (matches.length === 0) {
-
-    matches = products
-      .sort((a, b) => b.demand - a.demand)
-      .slice(0, 3);
-
-    results.innerHTML = `
-      <div class="result-card">
-        <h3>No exact matches for "${escapeHTML(category)}"</h3>
-        <p>
-          Here are some high-demand products that may be worth researching.
-        </p>
-      </div>
-    `;
-  } else {
-
-    results.innerHTML = `
-      <div class="result-card">
-        <h3>${escapeHTML(category.charAt(0).toUpperCase() + category.slice(1))} opportunities</h3>
-        <p>
-          ${matches.length} potential product opportunit${matches.length === 1 ? "y" : "ies"} found.
-        </p>
-      </div>
-    `;
-  }
-
-
-  /* Add product cards */
-
-  matches.forEach(product => {
-
-    const profit = calculateProfit(product.buy, product.sell);
-    const margin = calculateMargin(product.buy, product.sell);
-
-    const card = document.createElement("div");
-
-    card.className = "result-card";
-
-    card.innerHTML = `
-      <h3>${escapeHTML(product.name)}</h3>
-
-      <p>
-        <strong>Estimated Buy:</strong> ${money(product.buy)}
-      </p>
-
-      <p>
-        <strong>Estimated Sell:</strong> ${money(product.sell)}
-      </p>
-
-      <p>
-        <strong>Est. Profit:</strong> ${money(profit)}
-      </p>
-
-      <p>
-        <strong>Margin:</strong> ${Math.round(margin)}%
-      </p>
-
-      <p>
-        <strong>Demand:</strong> ${product.demand}/100
-      </p>
-
-      <p>
-        <strong>Competition:</strong> ${product.competition}
-      </p>
-
-      <button
-        class="button primary"
-        type="button"
-        onclick="saveOpportunity('${escapeAttribute(product.name)}')"
-      >
-        Save Opportunity
-      </button>
-    `;
-
-    results.appendChild(card);
-  });
-
-
-  /* Move user to results */
-
-  results.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-}
-
-
-/* ---------- SAVE OPPORTUNITY ---------- */
-
-function saveOpportunity(productName) {
-
-  let saved = JSON.parse(
-    localStorage.getItem("profitScoutSaved") || "[]"
-  );
-
-  if (!saved.includes(productName)) {
-    saved.push(productName);
-
-    localStorage.setItem(
-      "profitScoutSaved",
-      JSON.stringify(saved)
-    );
-
-    alert(productName + " has been saved to your opportunities.");
-  } else {
-    alert(productName + " is already saved.");
-  }
-}
-
-
-/* ---------- PRO WAITLIST ---------- */
-
-function showComingSoon() {
-
-  alert(
-    "ProfitScout Pro is coming soon!\n\n" +
-    "The Pro version will include advanced product filters, " +
-    "saved product lists, profit calculations and opportunity scoring."
-  );
-}
-
-
-/* ---------- SAFE HTML HELPERS ---------- */
-
-function escapeHTML(value) {
-
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function escapeAttribute(value) {
-  return String(value).replace(/'/g, "\\'");
-}
-
-
-/* ---------- ENTER KEY ---------- */
-
-document.addEventListener("DOMContentLoaded", function () {
-
-  const categoryInput = document.getElementById("category");
-
-  if (categoryInput) {
-
-    categoryInput.addEventListener("keydown", function (event) {
-
-      if (event.key === "Enter") {
-        event.preventDefault();
-        scoutProducts();
-      }
-
-    });
-
-  }
-
-});
+===========================================================
+*/
 
 
 /* =========================================================
-   PROFIT CALCULATOR
-   ========================================================= */
-
-const sale = document.getElementById("sale");
-const cost = document.getElementById("cost");
-const fee = document.getElementById("fee");
-
-const saleOut = document.getElementById("saleOut");
-const costOut = document.getElementById("costOut");
-const feeOut = document.getElementById("feeOut");
-const profit = document.getElementById("profit");
-const margin = document.getElementById("margin");
-
-
-function updateCalc() {
-
-  if (!sale || !cost || !fee) return;
-
-  const s = Number(sale.value);
-  const c = Number(cost.value);
-  const f = Number(fee.value);
-
-  const p = s - c - f;
-
-  const m = s > 0
-    ? (p / s) * 100
-    : 0;
-
-  if (saleOut) saleOut.textContent = money(s);
-  if (costOut) costOut.textContent = money(c);
-  if (feeOut) feeOut.textContent = money(f);
-  if (profit) profit.textContent = money(p);
-  if (margin) margin.textContent = Math.round(m) + "%";
-}
-
-
-if (sale && cost && fee) {
-
-  sale.addEventListener("input", updateCalc);
-  cost.addEventListener("input", updateCalc);
-  fee.addEventListener("input", updateCalc);
-
-  updateCalc();
-}
-
-
-/* =========================================================
-   LEAD FORM
-   ========================================================= */
-
-const leadForm = document.getElementById("leadForm");
-
-if (leadForm) {
-
-  leadForm.addEventListener("submit", function(event) {
-
-    event.preventDefault();
-
-    const message =
-      document.getElementById("formMessage");
-
-    if (message) {
-
-      message.textContent =
-        "Thanks! Your request has been captured. " +
-        "Connect this form to your email or CRM before going live.";
-    }
-
-    leadForm.reset();
-
-  });
-
-}
-/* =========================================================
-   PROFITSCOUT - UPGRADED PRODUCT RESULTS
-   ========================================================= */
-
-function upgradedScoutProducts() {
-
-  const input = document.getElementById("category");
-  const results = document.getElementById("results");
-
-  if (!input || !results) return;
-
-  const category = input.value.trim().toLowerCase();
-
-  if (!category) {
-    results.innerHTML = `
-      <div class="result-card">
-        <h3>Enter a category first</h3>
-        <p>Try Kitchen, Home, Pets, Fitness, Toys, Auto, or Travel.</p>
-      </div>
-    `;
-    return;
-  }
-
-  let matches = products.filter(product => {
-
-    const text =
-      product.name.toLowerCase() +
-      " " +
-      product.categories.join(" ");
-
-    return text.includes(category);
-  });
-
-  if (matches.length === 0) {
-    matches = [...products]
-      .sort((a, b) => b.demand - a.demand)
-      .slice(0, 5);
-  }
-
-  function renderProducts(list) {
-
-    let html = `
-      <div class="result-card">
-        <h2>
-          ${category.charAt(0).toUpperCase() + category.slice(1)}
-          Opportunities
-        </h2>
-
-        <p>
-          ${list.length} products worth researching
-        </p>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:15px 0;">
-
-          <button
-            type="button"
-            class="button primary"
-            onclick="sortProfitScout('profit')">
-            Highest Profit
-          </button>
-
-          <button
-            type="button"
-            class="button primary"
-            onclick="sortProfitScout('demand')">
-            Highest Demand
-          </button>
-
-          <button
-            type="button"
-            class="button primary"
-            onclick="sortProfitScout('margin')">
-            Highest Margin
-          </button>
-
-        </div>
-      </div>
-    `;
-
-    list.forEach(product => {
-
-      const profit =
-        Number(product.sell) - Number(product.buy);
-
-      const margin =
-        product.sell > 0
-          ? (profit / product.sell) * 100
-          : 0;
-
-      const opportunityScore =
-        Math.round(
-          (Number(product.demand) * 0.5) +
-          (Math.min(margin, 100) * 0.3) +
-          (product.competition === "Low"
-            ? 20
-            : product.competition === "Medium"
-              ? 12
-              : 6)
-        );
-
-      const estimatedMonthlySales =
-        Math.max(
-          10,
-          Math.round(product.demand * 2.5)
-        );
-
-      const estimatedMonthlyProfit =
-        Math.round(
-          estimatedMonthlySales * profit
-        );
-
-      html += `
-        <div class="result-card">
-
-          <h2>${product.name}</h2>
-
-          <p>
-            <strong>Opportunity Score:</strong>
-            ${opportunityScore}/100
-          </p>
-
-          <p>
-            <strong>Estimated Buy:</strong>
-            $${Number(product.buy).toFixed(2)}
-          </p>
-
-          <p>
-            <strong>Estimated Sell:</strong>
-            $${Number(product.sell).toFixed(2)}
-          </p>
-
-          <p>
-            <strong>Profit Per Sale:</strong>
-            $${profit.toFixed(2)}
-          </p>
-
-          <p>
-            <strong>Margin:</strong>
-            ${Math.round(margin)}%
-          </p>
-
-          <p>
-            <strong>Demand:</strong>
-            ${product.demand}/100
-          </p>
-
-          <p>
-            <strong>Competition:</strong>
-            ${product.competition}
-          </p>
-
-          <hr>
-
-          <p>
-            <strong>Estimated Monthly Sales:</strong>
-            ${estimatedMonthlySales}
-          </p>
-
-          <p>
-            <strong>Estimated Monthly Profit:</strong>
-            $${estimatedMonthlyProfit.toLocaleString()}
-          </p>
-
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
-
-            <button
-              type="button"
-              class="button primary"
-              onclick="saveOpportunity('${product.name.replace(/'/g, "\\'")}')">
-              Save Opportunity
-            </button>
-
-            <button
-              type="button"
-              class="button primary"
-              onclick="researchProduct('${product.name.replace(/'/g, "\\'")}')">
-              Research Product
-            </button>
-
-          </div>
-
-        </div>
-      `;
-    });
-
-    results.innerHTML = html;
-
-    results.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-  }
-
-  window.currentProfitScoutResults = matches;
-
-  renderProducts(matches);
-}
-
-
-/* ---------- SORT RESULTS ---------- */
-
-function sortProfitScout(type) {
-
-  if (!window.currentProfitScoutResults) return;
-
-  const sorted = [...window.currentProfitScoutResults];
-
-  if (type === "profit") {
-
-    sorted.sort((a, b) =>
-      (b.sell - b.buy) - (a.sell - a.buy)
-    );
-
-  } else if (type === "demand") {
-
-    sorted.sort((a, b) =>
-      b.demand - a.demand
-    );
-
-  } else if (type === "margin") {
-
-    sorted.sort((a, b) => {
-
-      const marginA =
-        ((a.sell - a.buy) / a.sell) * 100;
-
-      const marginB =
-        ((b.sell - b.buy) / b.sell) * 100;
-
-      return marginB - marginA;
-    });
-  }
-
-  window.currentProfitScoutResults = sorted;
-
-  /* Re-run the display using the selected order */
-
-  const results = document.getElementById("results");
-
-  if (!results) return;
-
-  const category =
-    document.getElementById("category")?.value || "Product";
-
-  let html = `
-    <div class="result-card">
-
-      <h2>
-        ${category.charAt(0).toUpperCase() + category.slice(1)}
-        Opportunities
-      </h2>
-
-      <p>Sorted by ${type}.</p>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:15px 0;">
-
-        <button
-          type="button"
-          class="button primary"
-          onclick="sortProfitScout('profit')">
-          Highest Profit
-        </button>
-
-        <button
-          type="button"
-          class="button primary"
-          onclick="sortProfitScout('demand')">
-          Highest Demand
-        </button>
-
-        <button
-          type="button"
-          class="button primary"
-          onclick="sortProfitScout('margin')">
-          Highest Margin
-        </button>
-
-      </div>
-
-    </div>
-  `;
-
-  sorted.forEach(product => {
-
-    const profit =
-      product.sell - product.buy;
-
-    const margin =
-      (profit / product.sell) * 100;
-
-    const opportunityScore =
-      Math.round(
-        product.demand * 0.5 +
-        Math.min(margin, 100) * 0.3 +
-        (product.competition === "Low"
-          ? 20
-          : product.competition === "Medium"
-            ? 12
-            : 6)
-      );
-
-    const monthlySales =
-      Math.max(10, Math.round(product.demand * 2.5));
-
-    const monthlyProfit =
-      Math.round(monthlySales * profit);
-
-    html += `
-      <div class="result-card">
-
-        <h2>${product.name}</h2>
-
-        <p><strong>Opportunity Score:</strong> ${opportunityScore}/100</p>
-
-        <p><strong>Buy:</strong> $${product.buy.toFixed(2)}</p>
-
-        <p><strong>Sell:</strong> $${product.sell.toFixed(2)}</p>
-
-        <p><strong>Profit:</strong> $${profit.toFixed(2)}</p>
-
-        <p><strong>Margin:</strong> ${Math.round(margin)}%</p>
-
-        <p><strong>Demand:</strong> ${product.demand}/100</p>
-
-        <p><strong>Competition:</strong> ${product.competition}</p>
-
-        <hr>
-
-        <p>
-          <strong>Estimated Monthly Profit:</strong>
-          $${monthlyProfit.toLocaleString()}
-        </p>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
-
-          <button
-            type="button"
-            class="button primary"
-            onclick="saveOpportunity('${product.name.replace(/'/g, "\\'")}')">
-            Save Opportunity
-          </button>
-
-          <button
-            type="button"
-            class="button primary"
-            onclick="researchProduct('${product.name.replace(/'/g, "\\'")}')">
-            Research Product
-          </button>
-
-        </div>
-
-      </div>
-    `;
-  });
-
-  results.innerHTML = html;
-}
-
-
-/* ---------- PRODUCT RESEARCH ---------- */
-
-function researchProduct(productName) {
-
-  const searchURL =
-    "https://www.google.com/search?q=" +
-    encodeURIComponent(
-      productName +
-      " wholesale supplier Amazon selling price"
-    );
-
-  window.open(searchURL, "_blank");
-}
-
-
-/* ---------- REPLACE THE ORIGINAL SCOUT FUNCTION ---------- */
-
-window.scoutProducts = upgradedScoutProducts;
-/* =========================================================
-   PROFITSCOUT RESEARCH + ROI UPGRADE
-   ========================================================= */
+   STARTUP
+========================================================= */
 
 (function () {
-  "use strict";
 
-  function getProductName(button) {
-    let current = button;
+    function startProfitScout() {
 
-    for (let i = 0; i < 8 && current; i++) {
-      const heading = current.querySelector("h1, h2, h3, h4, h5");
+        console.log("ProfitScout: JavaScript started.");
 
-      if (heading && heading.textContent.trim()) {
-        return heading.textContent.trim();
-      }
+        setupProductSearch();
+        setupCalculator();
+        setupResearchButtons();
 
-      current = current.parentElement;
+        /*
+         * Run calculator once when the page loads.
+         */
+        calculateProfit();
+
+        console.log("ProfitScout: All systems ready.");
     }
 
-    return "Product Research";
-  }
 
-  function money(value) {
-    return "$" + Number(value || 0).toFixed(2);
-  }
-
-  function createResearchModal(productName) {
-    const old = document.getElementById("profitscoutResearchModal");
-    if (old) old.remove();
-
-    const modal = document.createElement("div");
-    modal.id = "profitscoutResearchModal";
-
-    modal.innerHTML = `
-      <div class="ps-modal-overlay">
-        <div class="ps-modal">
-
-          <button class="ps-close" id="psCloseResearch">×</button>
-
-          <div class="ps-modal-title">
-            🔎 Product Research
-          </div>
-
-          <div class="ps-product-name">
-            ${productName}
-          </div>
-
-          <div class="ps-research-links">
-
-            <a target="_blank"
-              href="https://www.amazon.com/s?k=${encodeURIComponent(productName)}">
-              🛒 Search Amazon
-            </a>
-
-            <a target="_blank"
-              href="https://www.google.com/search?tbm=shop&q=${encodeURIComponent(productName)}">
-              🛍️ Compare Prices
-            </a>
-
-            <a target="_blank"
-              href="https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(productName)}">
-              📦 Search eBay
-            </a>
-
-            <a target="_blank"
-              href="https://www.walmart.com/search?q=${encodeURIComponent(productName)}">
-              🏪 Search Walmart
-            </a>
-
-          </div>
-
-          <hr>
-
-          <h3>💰 Profit & ROI Calculator</h3>
-
-          <label>
-            Selling Price
-            <input id="psSellPrice" type="number" step="0.01" value="16.99">
-          </label>
-
-          <label>
-            Product Cost
-            <input id="psBuyCost" type="number" step="0.01" value="3.50">
-          </label>
-
-          <label>
-            Amazon Referral Fee %
-            <input id="psReferral" type="number" step="0.1" value="15">
-          </label>
-
-          <label>
-            Shipping / Fulfillment Per Sale
-            <input id="psFulfillment" type="number" step="0.01" value="3.50">
-          </label>
-
-          <label>
-            Other Cost Per Sale
-            <input id="psOtherCost" type="number" step="0.01" value="0">
-          </label>
-
-          <label>
-            Estimated Monthly Sales
-            <input id="psMonthlySales" type="number" step="1" value="225">
-          </label>
-
-          <div class="ps-results">
-
-            <div>
-              <span>Amazon Fee</span>
-              <strong id="psAmazonFee">$0.00</strong>
-            </div>
-
-            <div>
-              <span>Net Profit / Sale</span>
-              <strong id="psNetProfit">$0.00</strong>
-            </div>
-
-            <div>
-              <span>Net Margin</span>
-              <strong id="psNetMargin">0%</strong>
-            </div>
-
-            <div>
-              <span>ROI</span>
-              <strong id="psROI">0%</strong>
-            </div>
-
-            <div>
-              <span>Estimated Monthly Profit</span>
-              <strong id="psMonthlyProfit">$0.00</strong>
-            </div>
-
-            <div class="ps-verdict" id="psVerdict">
-              RESEARCHING...
-            </div>
-
-          </div>
-
-          <p class="ps-disclaimer">
-            Estimates only. Actual Amazon fees, fulfillment, shipping,
-            returns, storage and other costs can vary.
-          </p>
-
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    const sell = document.getElementById("psSellPrice");
-    const buy = document.getElementById("psBuyCost");
-    const referral = document.getElementById("psReferral");
-    const fulfillment = document.getElementById("psFulfillment");
-    const other = document.getElementById("psOtherCost");
-    const monthlySales = document.getElementById("psMonthlySales");
-
-    function calculate() {
-
-      const sellingPrice = Number(sell.value) || 0;
-      const buyCost = Number(buy.value) || 0;
-      const referralPercent = Number(referral.value) || 0;
-      const fulfillmentCost = Number(fulfillment.value) || 0;
-      const otherCost = Number(other.value) || 0;
-      const units = Number(monthlySales.value) || 0;
-
-      const amazonFee =
-        sellingPrice * (referralPercent / 100);
-
-      const netProfit =
-        sellingPrice -
-        buyCost -
-        amazonFee -
-        fulfillmentCost -
-        otherCost;
-
-      const margin =
-        sellingPrice > 0
-          ? (netProfit / sellingPrice) * 100
-          : 0;
-
-      const investment =
-        buyCost + fulfillmentCost + otherCost;
-
-      const roi =
-        investment > 0
-          ? (netProfit / investment) * 100
-          : 0;
-
-      const monthlyProfit =
-        netProfit * units;
-
-      document.getElementById("psAmazonFee").textContent =
-        money(amazonFee);
-
-      document.getElementById("psNetProfit").textContent =
-        money(netProfit);
-
-      document.getElementById("psNetMargin").textContent =
-        Math.round(margin) + "%";
-
-      document.getElementById("psROI").textContent =
-        Math.round(roi) + "%";
-
-      document.getElementById("psMonthlyProfit").textContent =
-        money(monthlyProfit);
-
-      const verdict =
-        document.getElementById("psVerdict");
-
-      if (netProfit <= 0) {
-
-        verdict.textContent = "🚫 AVOID";
-        verdict.className = "ps-verdict avoid";
-
-      } else if (roi >= 100 && margin >= 20) {
-
-        verdict.textContent = "🔥 STRONG OPPORTUNITY";
-        verdict.className = "ps-verdict strong";
-
-      } else if (roi >= 50 && margin >= 15) {
-
-        verdict.textContent = "✅ WORTH RESEARCHING";
-        verdict.className = "ps-verdict good";
-
-      } else {
-
-        verdict.textContent = "⚠️ MAYBE — RESEARCH MORE";
-        verdict.className = "ps-verdict maybe";
-      }
+    /*
+     * Works whether this script loads before or after
+     * the page has finished loading.
+     */
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", startProfitScout);
+    } else {
+        startProfitScout();
     }
 
-    [
-      sell,
-      buy,
-      referral,
-      fulfillment,
-      other,
-      monthlySales
-    ].forEach(input => {
-      input.addEventListener("input", calculate);
-    });
 
-    calculate();
+    /* =====================================================
+       PRODUCT SEARCH
+    ===================================================== */
 
-    document
-      .getElementById("psCloseResearch")
-      .addEventListener("click", () => {
-        modal.remove();
-      });
+    function setupProductSearch() {
 
-    modal
-      .querySelector(".ps-modal-overlay")
-      .addEventListener("click", function (event) {
-        if (event.target === this) {
-          modal.remove();
+        var buttons = Array.prototype.slice.call(
+            document.querySelectorAll("button, a")
+        );
+
+        buttons.forEach(function (button) {
+
+            var text = (
+                button.textContent ||
+                button.innerText ||
+                ""
+            ).trim().toLowerCase();
+
+            if (
+                text.includes("scout products") ||
+                text.includes("search products") ||
+                text.includes("find products")
+            ) {
+
+                /*
+                 * Remove old listeners by replacing the element.
+                 * This prevents duplicate old code from firing.
+                 */
+                var cleanButton = button.cloneNode(true);
+
+                button.parentNode.replaceChild(
+                    cleanButton,
+                    button
+                );
+
+                cleanButton.addEventListener(
+                    "click",
+                    function (event) {
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        searchProducts(cleanButton);
+
+                    }
+                );
+
+            }
+
+        });
+
+        /*
+         * Also support forms.
+         */
+        document.querySelectorAll("form").forEach(function (form) {
+
+            form.addEventListener("submit", function (event) {
+
+                var submitButton = form.querySelector(
+                    'button[type="submit"], input[type="submit"]'
+                );
+
+                if (!submitButton) {
+                    return;
+                }
+
+                var text = (
+                    submitButton.textContent ||
+                    submitButton.value ||
+                    ""
+                ).toLowerCase();
+
+                if (
+                    text.includes("scout") ||
+                    text.includes("search")
+                ) {
+
+                    event.preventDefault();
+
+                    searchProducts(submitButton);
+                }
+
+            });
+
+        });
+
+    }
+
+
+    function findProductInput(button) {
+
+        /*
+         * First look inside the same form/card.
+         */
+        var parent = button;
+
+        for (var i = 0; i < 6 && parent; i++) {
+
+            var localInput = parent.querySelector &&
+                parent.querySelector(
+                    'input[type="text"], input[type="search"]'
+                );
+
+            if (localInput) {
+                return localInput;
+            }
+
+            parent = parent.parentElement;
         }
-      });
-  }
-
-  /* Intercept Research Product buttons before the old
-     Google-search action runs. */
-
-  document.addEventListener(
-    "click",
-    function (event) {
-
-      const element = event.target.closest(
-        "button, a"
-      );
-
-      if (!element) return;
-
-      const text =
-        element.textContent
-          .trim()
-          .toLowerCase();
-
-      if (
-        text.includes("research product") ||
-        text.includes("research this product")
-      ) {
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        const productName =
-          getProductName(element);
-
-        createResearchModal(productName);
-      }
-
-    },
-    true
-  );
 
 
-  /* Add the research-modal styling */
+        /*
+         * Look for likely product/category fields.
+         */
+        var inputs = Array.prototype.slice.call(
+            document.querySelectorAll(
+                'input[type="text"], input[type="search"]'
+            )
+        );
 
-  const style = document.createElement("style");
 
-  style.textContent = `
+        for (var j = 0; j < inputs.length; j++) {
 
-    .ps-modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 15, 30, 0.72);
-      z-index: 99999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      overflow-y: auto;
+            var field = inputs[j];
+
+            var placeholder = (
+                field.getAttribute("placeholder") || ""
+            ).toLowerCase();
+
+            var name = (
+                field.getAttribute("name") || ""
+            ).toLowerCase();
+
+            var id = (
+                field.id || ""
+            ).toLowerCase();
+
+            if (
+                placeholder.includes("product") ||
+                placeholder.includes("category") ||
+                placeholder.includes("search") ||
+                name.includes("product") ||
+                name.includes("category") ||
+                id.includes("product") ||
+                id.includes("category") ||
+                id.includes("search")
+            ) {
+
+                return field;
+            }
+
+        }
+
+
+        /*
+         * Last resort:
+         * use the first visible text input.
+         */
+        for (var k = 0; k < inputs.length; k++) {
+
+            if (
+                inputs[k].offsetParent !== null
+            ) {
+                return inputs[k];
+            }
+
+        }
+
+        return null;
     }
 
-    .ps-modal {
-      position: relative;
-      width: min(560px, 100%);
-      max-height: 92vh;
-      overflow-y: auto;
-      background: white;
-      border-radius: 24px;
-      padding: 26px;
-      box-sizing: border-box;
-      box-shadow: 0 20px 60px rgba(0,0,0,.30);
-      font-family: Arial, sans-serif;
+
+    function searchProducts(button) {
+
+        var input = findProductInput(button);
+
+        if (!input) {
+
+            alert(
+                "ProfitScout couldn't find the product search box."
+            );
+
+            return;
+        }
+
+
+        var product = String(input.value || "").trim();
+
+
+        if (!product) {
+
+            alert(
+                "Please enter a product or category first."
+            );
+
+            input.focus();
+
+            return;
+        }
+
+
+        /*
+         * Google Shopping.
+         */
+        var googleShoppingURL =
+            "https://www.google.com/search?tbm=shop&q=" +
+            encodeURIComponent(product);
+
+
+        console.log(
+            "ProfitScout searching for:",
+            product
+        );
+
+
+        /*
+         * Navigate directly.
+         *
+         * This avoids popup blockers that can stop
+         * window.open() on mobile browsers.
+         */
+        window.location.href = googleShoppingURL;
+
     }
 
-    .ps-close {
-      position: absolute;
-      right: 18px;
-      top: 12px;
-      border: 0;
-      background: transparent;
-      font-size: 34px;
-      cursor: pointer;
-      color: #555;
+
+    /* =====================================================
+       CALCULATOR
+    ===================================================== */
+
+    function setupCalculator() {
+
+        var ids = [
+            "sell",
+            "buy",
+            "referral",
+            "fulfillment",
+            "other",
+            "monthlySales"
+        ];
+
+
+        ids.forEach(function (id) {
+
+            var element = document.getElementById(id);
+
+            if (!element) {
+                return;
+            }
+
+
+            element.addEventListener(
+                "input",
+                calculateProfit
+            );
+
+            element.addEventListener(
+                "change",
+                calculateProfit
+            );
+
+        });
+
     }
 
-    .ps-modal-title {
-      font-size: 28px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      padding-right: 35px;
+
+    function numberValue(id) {
+
+        var element = document.getElementById(id);
+
+        if (!element) {
+            return 0;
+        }
+
+        var value = parseFloat(element.value);
+
+        if (isNaN(value)) {
+            return 0;
+        }
+
+        return value;
     }
 
-    .ps-product-name {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      color: #596275;
+
+    function setText(id, value) {
+
+        var element = document.getElementById(id);
+
+        if (!element) {
+            return;
+        }
+
+        element.textContent = value;
     }
 
-    .ps-research-links {
-      display: grid;
-      gap: 10px;
+
+    function money(value) {
+
+        if (!isFinite(value)) {
+            value = 0;
+        }
+
+        return value.toLocaleString(
+            "en-US",
+            {
+                style: "currency",
+                currency: "USD"
+            }
+        );
+
     }
 
-    .ps-research-links a {
-      display: block;
-      padding: 14px 16px;
-      border-radius: 12px;
-      background: #6754e9;
-      color: white;
-      text-decoration: none;
-      font-weight: 700;
-      text-align: center;
+
+    function calculateProfit() {
+
+        /*
+         * Input values.
+         */
+        var sell = numberValue("sell");
+
+        var buy = numberValue("buy");
+
+        var referral = numberValue("referral");
+
+        var fulfillment = numberValue("fulfillment");
+
+        var other = numberValue("other");
+
+        var monthlySales = numberValue("monthlySales");
+
+
+        /*
+         * Total fees/costs.
+         */
+        var totalCosts =
+            buy +
+            referral +
+            fulfillment +
+            other;
+
+
+        /*
+         * Net profit per item.
+         */
+        var netProfit =
+            sell -
+            totalCosts;
+
+
+        /*
+         * Margin.
+         */
+        var margin = 0;
+
+        if (sell > 0) {
+
+            margin =
+                (netProfit / sell) * 100;
+
+        }
+
+
+        /*
+         * ROI.
+         */
+        var roi = 0;
+
+        if (totalCosts > 0) {
+
+            roi =
+                (netProfit / totalCosts) * 100;
+
+        }
+
+
+        /*
+         * Monthly profit.
+         */
+        var monthlyProfit =
+            netProfit * monthlySales;
+
+
+        /*
+         * Update visible fields.
+         */
+        setText(
+            "psNetProfit",
+            money(netProfit)
+        );
+
+
+        setText(
+            "psNetMargin",
+            Math.round(margin) + "%"
+        );
+
+
+        setText(
+            "psROI",
+            Math.round(roi) + "%"
+        );
+
+
+        setText(
+            "psMonthlyProfit",
+            money(monthlyProfit)
+        );
+
+
+        /*
+         * Optional Amazon fee output.
+         */
+        var amazonFee = document.getElementById(
+            "psAmazonFee"
+        );
+
+        if (amazonFee) {
+
+            /*
+             * If referral fee is entered directly,
+             * display that amount.
+             */
+            amazonFee.textContent =
+                money(referral);
+
+        }
+
+
+        /*
+         * Verdict.
+         */
+        updateVerdict(
+            netProfit,
+            margin,
+            roi
+        );
+
     }
 
-    .ps-modal hr {
-      border: 0;
-      border-top: 1px solid #ddd;
-      margin: 24px 0;
+
+    /* =====================================================
+       VERDICT
+    ===================================================== */
+
+    function updateVerdict(
+        netProfit,
+        margin,
+        roi
+    ) {
+
+        var verdict = document.getElementById(
+            "psVerdict"
+        );
+
+        if (!verdict) {
+            return;
+        }
+
+
+        /*
+         * Remove previous classes.
+         */
+        verdict.classList.remove(
+            "ps-verdict-avoid",
+            "ps-verdict-maybe",
+            "ps-verdict-worth",
+            "ps-verdict-strong"
+        );
+
+
+        /*
+         * Losing money.
+         */
+        if (netProfit <= 0) {
+
+            verdict.textContent =
+                "⛔ AVOID — This product loses money.";
+
+            verdict.classList.add(
+                "ps-verdict-avoid"
+            );
+
+            return;
+        }
+
+
+        /*
+         * Excellent opportunity.
+         */
+        if (
+            roi >= 100 &&
+            margin >= 30
+        ) {
+
+            verdict.textContent =
+                "🔥 STRONG BUY — Excellent profit potential.";
+
+            verdict.classList.add(
+                "ps-verdict-strong"
+            );
+
+            return;
+        }
+
+
+        /*
+         * Good opportunity.
+         */
+        if (
+            roi >= 50 &&
+            margin >= 20
+        ) {
+
+            verdict.textContent =
+                "✅ WORTH IT — Good profit potential.";
+
+            verdict.classList.add(
+                "ps-verdict-worth"
+            );
+
+            return;
+        }
+
+
+        /*
+         * Everything else.
+         */
+        verdict.textContent =
+            "⚠️ MAYBE — Review the numbers carefully.";
+
+        verdict.classList.add(
+            "ps-verdict-maybe"
+        );
+
     }
 
-    .ps-modal h3 {
-      margin-bottom: 15px;
+
+    /* =====================================================
+       RESEARCH BUTTONS
+    ===================================================== */
+
+    function setupResearchButtons() {
+
+        document.addEventListener(
+            "click",
+            function (event) {
+
+                var element = event.target.closest(
+                    "button, a"
+                );
+
+                if (!element) {
+                    return;
+                }
+
+
+                var text = (
+                    element.textContent ||
+                    element.innerText ||
+                    ""
+                ).trim().toLowerCase();
+
+
+                if (
+                    text.includes("research product") ||
+                    text.includes("research")
+                ) {
+
+                    /*
+                     * Don't hijack unrelated links.
+                     */
+                    if (
+                        !text.includes("product") &&
+                        !text.includes("research")
+                    ) {
+                        return;
+                    }
+
+
+                    event.preventDefault();
+
+                    var product =
+                        getProductName(element);
+
+
+                    if (
+                        !product ||
+                        product === "product research"
+                    ) {
+
+                        product = prompt(
+                            "What product do you want to research?"
+                        );
+
+                    }
+
+
+                    if (product) {
+
+                        showResearchModal(
+                            product
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
     }
 
-    .ps-modal label {
-      display: block;
-      font-weight: 700;
-      margin: 13px 0;
-      color: #374151;
+
+    function getProductName(element) {
+
+        var current = element;
+
+
+        /*
+         * Search nearby headings.
+         */
+        for (
+            var i = 0;
+            i < 8 && current;
+            i++
+        ) {
+
+            var heading = current.querySelector &&
+                current.querySelector(
+                    "h1, h2, h3, h4, .product-name, .ps-product-name"
+                );
+
+
+            if (
+                heading &&
+                heading.textContent.trim()
+            ) {
+
+                return heading.textContent.trim();
+
+            }
+
+
+            current =
+                current.parentElement;
+
+        }
+
+
+        return "Product Research";
+
     }
 
-    .ps-modal input {
-      width: 100%;
-      box-sizing: border-box;
-      margin-top: 6px;
-      padding: 13px;
-      border: 1px solid #ccd2dc;
-      border-radius: 10px;
-      font-size: 17px;
+
+    /* =====================================================
+       RESEARCH MODAL
+    ===================================================== */
+
+    function showResearchModal(product) {
+
+        /*
+         * Remove an existing modal.
+         */
+        var existing = document.getElementById(
+            "profitScoutResearchModal"
+        );
+
+        if (existing) {
+            existing.remove();
+        }
+
+
+        /*
+         * Create overlay.
+         */
+        var overlay =
+            document.createElement("div");
+
+        overlay.id =
+            "profitScoutResearchModal";
+
+
+        overlay.style.position =
+            "fixed";
+
+        overlay.style.inset =
+            "0";
+
+        overlay.style.background =
+            "rgba(10,15,30,.75)";
+
+        overlay.style.zIndex =
+            "999999";
+
+        overlay.style.display =
+            "flex";
+
+        overlay.style.alignItems =
+            "center";
+
+        overlay.style.justifyContent =
+            "center";
+
+        overlay.style.padding =
+            "20px";
+
+        overlay.style.boxSizing =
+            "border-box";
+
+
+        /*
+         * Modal.
+         */
+        var modal =
+            document.createElement("div");
+
+
+        modal.style.background =
+            "#ffffff";
+
+        modal.style.width =
+            "min(560px, 100%)";
+
+        modal.style.maxHeight =
+            "90vh";
+
+        modal.style.overflowY =
+            "auto";
+
+        modal.style.borderRadius =
+            "22px";
+
+        modal.style.padding =
+            "28px";
+
+        modal.style.boxSizing =
+            "border-box";
+
+        modal.style.position =
+            "relative";
+
+
+        /*
+         * Close button.
+         */
+        var close =
+            document.createElement("button");
+
+        close.type =
+            "button";
+
+        close.textContent =
+            "×";
+
+        close.setAttribute(
+            "aria-label",
+            "Close"
+        );
+
+        close.style.position =
+            "absolute";
+
+        close.style.right =
+            "16px";
+
+        close.style.top =
+            "10px";
+
+        close.style.border =
+            "0";
+
+        close.style.background =
+            "transparent";
+
+        close.style.fontSize =
+            "34px";
+
+        close.style.cursor =
+            "pointer";
+
+
+        close.addEventListener(
+            "click",
+            function () {
+                overlay.remove();
+            }
+        );
+
+
+        /*
+         * Title.
+         */
+        var title =
+            document.createElement("h2");
+
+        title.textContent =
+            "Research: " + product;
+
+        title.style.marginTop =
+            "0";
+
+        title.style.paddingRight =
+            "35px";
+
+
+        /*
+         * Description.
+         */
+        var description =
+            document.createElement("p");
+
+        description.textContent =
+            "Research this product across major shopping sources.";
+
+        description.style.color =
+            "#667085";
+
+
+        /*
+         * Search buttons.
+         */
+        var sources = [
+            {
+                name: "Google Shopping",
+                url:
+                    "https://www.google.com/search?tbm=shop&q="
+            },
+            {
+                name: "Amazon",
+                url:
+                    "https://www.amazon.com/s?k="
+            },
+            {
+                name: "eBay",
+                url:
+                    "https://www.ebay.com/sch/i.html?_nkw="
+            },
+            {
+                name: "Walmart",
+                url:
+                    "https://www.walmart.com/search?q="
+            }
+        ];
+
+
+        sources.forEach(
+            function (source) {
+
+                var link =
+                    document.createElement("a");
+
+                link.textContent =
+                    "Search " + source.name;
+
+                link.href =
+                    source.url +
+                    encodeURIComponent(product);
+
+                link.target =
+                    "_blank";
+
+                link.rel =
+                    "noopener noreferrer";
+
+
+                link.style.display =
+                    "block";
+
+                link.style.padding =
+                    "14px 16px";
+
+                link.style.marginBottom =
+                    "10px";
+
+                link.style.borderRadius =
+                    "12px";
+
+                link.style.background =
+                    "#f3f4f6";
+
+                link.style.color =
+                    "#111827";
+
+                link.style.textDecoration =
+                    "none";
+
+                link.style.fontWeight =
+                    "700";
+
+
+                modal.appendChild(link);
+
+            }
+        );
+
+
+        modal.appendChild(close);
+
+        modal.appendChild(title);
+
+        modal.appendChild(description);
+
+        overlay.appendChild(modal);
+
+        document.body.appendChild(overlay);
+
+
+        /*
+         * Close when clicking outside.
+         */
+        overlay.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === overlay
+                ) {
+
+                    overlay.remove();
+
+                }
+
+            }
+        );
+
     }
 
-    .ps-results {
-      margin-top: 22px;
-      border-radius: 16px;
-      background: #f4f5fb;
-      padding: 16px;
-    }
 
-    .ps-results > div {
-      display: flex;
-      justify-content: space-between;
-      gap: 15px;
-      padding: 10px 0;
-      border-bottom: 1px solid #ddd;
-    }
+})();
 
-    .ps-results > div:last-child {
-      border-bottom: 0;
-    }
-
-    .ps-verdict {
-      display: block !important;
-      text-align: center;
-      font-size: 21px;
-      font-weight: 900;
-      margin-top: 10px;
-      padding: 14px;
-      border-radius: 12px;
-    }
-
-    .ps-verdict.strong {
-      background: #d9f7df;
-      color: #12652b;
-    }
-
-    .ps-verdict.good {
-      background: #e2f4ff;
-      color: #075985;
-    }
-
-    .ps-verdict.maybe {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .ps-verdict.avoid {
-      background: #ffe0e0;
-      color: #9b1c1c;
-    }
-
-    .ps-disclaimer {
-      font-size: 12px;
-      color: #6b7280;
-      line-height: 1.5;
-      margin-top: 16px;
-    }
-
-  `;
-
-  document.head.appendChild(style);
 
 /* =========================================================
-   PROFITSCOUT - PRODUCT SEARCH LINKS
-   ========================================================= */
-
-(function () {
-  "use strict";
-
-  window.profitScoutSearch = function (store, productName) {
-    if (!productName) return;
-
-    const query = encodeURIComponent(productName);
-    let url = "";
-
-    if (store === "amazon") {
-      url = "https://www.amazon.com/s?k=" + query;
-    }
-
-    if (store === "ebay") {
-      url = "https://www.ebay.com/sch/i.html?_nkw=" + query;
-    }
-
-    if (store === "walmart") {
-      url = "https://www.walmart.com/search?q=" + query;
-    }
-
-    if (url) {
-      window.open(url, "_blank");
-    }
-  };
-
-})();
-
-   /* =========================================================
-   PROFITSCOUT - RESEARCH ALL STORES UPGRADE
-   ========================================================= */
-
-(function () {
-  "use strict";
-
-  function getProductNameFromButton(button) {
-    let current = button;
-
-    for (let i = 0; i < 8 && current; i++) {
-      const heading = current.querySelector(
-        "h1, h2, h3, h4, .product-name, .ps-product-name"
-      );
-
-      if (heading && heading.textContent.trim()) {
-        return heading.textContent.trim();
-      }
-
-      current = current.parentElement;
-    }
-
-    return "Product Research";
-  }
-
-
-})();
-
-/* PROFITSCOUT - SCOUT PRODUCTS FIX */
-(function () {
-  "use strict";
-
-  document.addEventListener("click", function (event) {
-
-    var button = event.target.closest("button");
-
-    if (!button) return;
-
-    var buttonText = (button.textContent || "").trim().toLowerCase();
-
-    if (!buttonText.includes("scout products")) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    var input = button.closest("form")
-      ? button.closest("form").querySelector("input")
-      : null;
-
-    if (!input) {
-      input = document.querySelector(
-        'input[type="text"], input[type="search"]'
-      );
-    }
-
-    if (!input) {
-      alert("I can't find the product box.");
-      return;
-    }
-
-    var product = (input.value || "").trim();
-
-    if (!product) {
-      alert("Please enter a product category first.");
-      input.focus();
-      return;
-    }
-
-    var url =
-      "https://www.google.com/search?tbm=shop&q=" +
-      encodeURIComponent(product);
-
-    window.location.href = url;
-
-  }, true);
-
-  console.log("ProfitScout Scout Products FIX loaded.");
-
-})();
+   PROFITSCOUT END
+========================================================= */
