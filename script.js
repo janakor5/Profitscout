@@ -1322,63 +1322,55 @@ window.scoutProducts = upgradedScoutProducts;
 
 })();
 
-/* PROFITSCOUT - WORKING SCOUT PRODUCTS BUTTON */
+/* PROFITSCOUT - SCOUT PRODUCTS FIX */
 (function () {
   "use strict";
 
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("click", function (event) {
 
-    const buttons = Array.from(document.querySelectorAll("button"));
-    const scoutButton = buttons.find(function (button) {
-      return button.textContent.trim().toLowerCase().includes("scout products");
-    });
+    var button = event.target.closest("button");
 
-    if (!scoutButton) {
-      console.log("ProfitScout: Scout Products button not found.");
+    if (!button) return;
+
+    var buttonText = (button.textContent || "").trim().toLowerCase();
+
+    if (!buttonText.includes("scout products")) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    var input = button.closest("form")
+      ? button.closest("form").querySelector("input")
+      : null;
+
+    if (!input) {
+      input = document.querySelector(
+        'input[type="text"], input[type="search"]'
+      );
+    }
+
+    if (!input) {
+      alert("I can't find the product box.");
       return;
     }
 
-    scoutButton.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
+    var product = (input.value || "").trim();
 
-      const inputs = Array.from(document.querySelectorAll("input"));
+    if (!product) {
+      alert("Please enter a product category first.");
+      input.focus();
+      return;
+    }
 
-      const input = inputs.find(function (field) {
-        return (
-          field.type === "text" ||
-          field.type === "search" ||
-          field.placeholder.toLowerCase().includes("product") ||
-          field.placeholder.toLowerCase().includes("category")
-        );
-      });
+    var url =
+      "https://www.google.com/search?tbm=shop&q=" +
+      encodeURIComponent(product);
 
-      if (!input) {
-        alert("Please enter a product category first.");
-        return;
-      }
+    window.location.href = url;
 
-      const product = input.value.trim();
+  }, true);
 
-      if (!product) {
-        alert("Please enter a product category first.");
-        input.focus();
-        return;
-      }
+  console.log("ProfitScout Scout Products FIX loaded.");
 
-      const query = encodeURIComponent(product);
-
-      /* Google Shopping */
-      const googleUrl =
-        "https://www.google.com/search?tbm=shop&q=" + query;
-
-      /* Open Google Shopping */
-      window.open(googleUrl, "_blank");
-
-      console.log("ProfitScout searching for:", product);
-    });
-
-    console.log("ProfitScout: Scout Products button is READY.");
-
-  });
 })();
