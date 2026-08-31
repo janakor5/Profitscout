@@ -1293,4 +1293,6 @@ window.scoutProducts = upgradedScoutProducts;
   };
 
 })();
+   
 })();
+
