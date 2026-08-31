@@ -1322,3 +1322,63 @@ window.scoutProducts = upgradedScoutProducts;
 
 })();
 
+/* PROFITSCOUT - WORKING SCOUT PRODUCTS BUTTON */
+(function () {
+  "use strict";
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const buttons = Array.from(document.querySelectorAll("button"));
+    const scoutButton = buttons.find(function (button) {
+      return button.textContent.trim().toLowerCase().includes("scout products");
+    });
+
+    if (!scoutButton) {
+      console.log("ProfitScout: Scout Products button not found.");
+      return;
+    }
+
+    scoutButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const inputs = Array.from(document.querySelectorAll("input"));
+
+      const input = inputs.find(function (field) {
+        return (
+          field.type === "text" ||
+          field.type === "search" ||
+          field.placeholder.toLowerCase().includes("product") ||
+          field.placeholder.toLowerCase().includes("category")
+        );
+      });
+
+      if (!input) {
+        alert("Please enter a product category first.");
+        return;
+      }
+
+      const product = input.value.trim();
+
+      if (!product) {
+        alert("Please enter a product category first.");
+        input.focus();
+        return;
+      }
+
+      const query = encodeURIComponent(product);
+
+      /* Google Shopping */
+      const googleUrl =
+        "https://www.google.com/search?tbm=shop&q=" + query;
+
+      /* Open Google Shopping */
+      window.open(googleUrl, "_blank");
+
+      console.log("ProfitScout searching for:", product);
+    });
+
+    console.log("ProfitScout: Scout Products button is READY.");
+
+  });
+})();
