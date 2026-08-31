@@ -1319,6 +1319,6 @@ window.scoutProducts = upgradedScoutProducts;
     return "Product Research";
   }
 
-  fun
+
 })();
 
