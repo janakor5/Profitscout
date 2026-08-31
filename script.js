@@ -1,3 +1,25 @@
+"use strict";
+
+/*
+===========================================================
+ PROFITSCOUT
+ COMPLETE JAVASCRIPT
+===========================================================
+
+ This file controls:
+ - Product/category searching
+ - Google Shopping search
+ - Profit calculator
+ - ROI calculation
+ - Margin calculation
+ - Monthly profit
+ - Buy verdict
+ - Research modal
+ - Mobile-friendly interactions
+
+ IMPORTANT:
+ Replace the ENTIRE contents of script.js with this file.
+ Do NOT paste this underneath the old code.
 ===========================================================
 */
 
