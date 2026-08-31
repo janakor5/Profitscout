@@ -1293,6 +1293,80 @@ window.scoutProducts = upgradedScoutProducts;
   };
 
 })();
-   
+
+   /* =========================================================
+   PROFITSCOUT - RESEARCH ALL STORES UPGRADE
+   ========================================================= */
+
+(function () {
+  "use strict";
+
+  function getProductNameFromButton(button) {
+    let current = button;
+
+    for (let i = 0; i < 8 && current; i++) {
+      const heading = current.querySelector(
+        "h1, h2, h3, h4, .product-name, .ps-product-name"
+      );
+
+      if (heading && heading.textContent.trim()) {
+        return heading.textContent.trim();
+      }
+
+      current = current.parentElement;
+    }
+
+    return "Product Research";
+  }
+
+  function searchStore(store, productName) {
+    if (!productName) return;
+
+    const query = encodeURIComponent(productName);
+    let url = "";
+
+    if (store === "amazon") {
+      url = "https://www.amazon.com/s?k=" + query;
+    }
+
+    if (store === "ebay") {
+      url = "https://www.ebay.com/sch/i.html?_nkw=" + query;
+    }
+
+    if (store === "walmart") {
+      url = "https://www.walmart.com/search?q=" + query;
+    }
+
+    if (store === "google") {
+      url = "https://www.google.com/search?tbm=shop&q=" + query;
+    }
+
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  window.profitScoutSearch = function (store, productName) {
+    if (!productName) {
+      productName = "Product Research";
+    }
+
+    searchStore(store, productName);
+  };
+
+  /* Add a Google Shopping button to existing research areas */
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest(".ps-research-google");
+
+    if (!button) return;
+
+    event.preventDefault();
+
+    const productName = getProductNameFromButton(button);
+
+    searchStore("google", productName);
+  });
+
+})();
 })();
 
