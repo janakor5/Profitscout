@@ -429,3 +429,380 @@ if (leadForm) {
   });
 
 }
+/* =========================================================
+   PROFITSCOUT - UPGRADED PRODUCT RESULTS
+   ========================================================= */
+
+function upgradedScoutProducts() {
+
+  const input = document.getElementById("category");
+  const results = document.getElementById("results");
+
+  if (!input || !results) return;
+
+  const category = input.value.trim().toLowerCase();
+
+  if (!category) {
+    results.innerHTML = `
+      <div class="result-card">
+        <h3>Enter a category first</h3>
+        <p>Try Kitchen, Home, Pets, Fitness, Toys, Auto, or Travel.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let matches = products.filter(product => {
+
+    const text =
+      product.name.toLowerCase() +
+      " " +
+      product.categories.join(" ");
+
+    return text.includes(category);
+  });
+
+  if (matches.length === 0) {
+    matches = [...products]
+      .sort((a, b) => b.demand - a.demand)
+      .slice(0, 5);
+  }
+
+  function renderProducts(list) {
+
+    let html = `
+      <div class="result-card">
+        <h2>
+          ${category.charAt(0).toUpperCase() + category.slice(1)}
+          Opportunities
+        </h2>
+
+        <p>
+          ${list.length} products worth researching
+        </p>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:15px 0;">
+
+          <button
+            type="button"
+            class="button primary"
+            onclick="sortProfitScout('profit')">
+            Highest Profit
+          </button>
+
+          <button
+            type="button"
+            class="button primary"
+            onclick="sortProfitScout('demand')">
+            Highest Demand
+          </button>
+
+          <button
+            type="button"
+            class="button primary"
+            onclick="sortProfitScout('margin')">
+            Highest Margin
+          </button>
+
+        </div>
+      </div>
+    `;
+
+    list.forEach(product => {
+
+      const profit =
+        Number(product.sell) - Number(product.buy);
+
+      const margin =
+        product.sell > 0
+          ? (profit / product.sell) * 100
+          : 0;
+
+      const opportunityScore =
+        Math.round(
+          (Number(product.demand) * 0.5) +
+          (Math.min(margin, 100) * 0.3) +
+          (product.competition === "Low"
+            ? 20
+            : product.competition === "Medium"
+              ? 12
+              : 6)
+        );
+
+      const estimatedMonthlySales =
+        Math.max(
+          10,
+          Math.round(product.demand * 2.5)
+        );
+
+      const estimatedMonthlyProfit =
+        Math.round(
+          estimatedMonthlySales * profit
+        );
+
+      html += `
+        <div class="result-card">
+
+          <h2>${product.name}</h2>
+
+          <p>
+            <strong>Opportunity Score:</strong>
+            ${opportunityScore}/100
+          </p>
+
+          <p>
+            <strong>Estimated Buy:</strong>
+            $${Number(product.buy).toFixed(2)}
+          </p>
+
+          <p>
+            <strong>Estimated Sell:</strong>
+            $${Number(product.sell).toFixed(2)}
+          </p>
+
+          <p>
+            <strong>Profit Per Sale:</strong>
+            $${profit.toFixed(2)}
+          </p>
+
+          <p>
+            <strong>Margin:</strong>
+            ${Math.round(margin)}%
+          </p>
+
+          <p>
+            <strong>Demand:</strong>
+            ${product.demand}/100
+          </p>
+
+          <p>
+            <strong>Competition:</strong>
+            ${product.competition}
+          </p>
+
+          <hr>
+
+          <p>
+            <strong>Estimated Monthly Sales:</strong>
+            ${estimatedMonthlySales}
+          </p>
+
+          <p>
+            <strong>Estimated Monthly Profit:</strong>
+            $${estimatedMonthlyProfit.toLocaleString()}
+          </p>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
+
+            <button
+              type="button"
+              class="button primary"
+              onclick="saveOpportunity('${product.name.replace(/'/g, "\\'")}')">
+              Save Opportunity
+            </button>
+
+            <button
+              type="button"
+              class="button primary"
+              onclick="researchProduct('${product.name.replace(/'/g, "\\'")}')">
+              Research Product
+            </button>
+
+          </div>
+
+        </div>
+      `;
+    });
+
+    results.innerHTML = html;
+
+    results.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
+  window.currentProfitScoutResults = matches;
+
+  renderProducts(matches);
+}
+
+
+/* ---------- SORT RESULTS ---------- */
+
+function sortProfitScout(type) {
+
+  if (!window.currentProfitScoutResults) return;
+
+  const sorted = [...window.currentProfitScoutResults];
+
+  if (type === "profit") {
+
+    sorted.sort((a, b) =>
+      (b.sell - b.buy) - (a.sell - a.buy)
+    );
+
+  } else if (type === "demand") {
+
+    sorted.sort((a, b) =>
+      b.demand - a.demand
+    );
+
+  } else if (type === "margin") {
+
+    sorted.sort((a, b) => {
+
+      const marginA =
+        ((a.sell - a.buy) / a.sell) * 100;
+
+      const marginB =
+        ((b.sell - b.buy) / b.sell) * 100;
+
+      return marginB - marginA;
+    });
+  }
+
+  window.currentProfitScoutResults = sorted;
+
+  /* Re-run the display using the selected order */
+
+  const results = document.getElementById("results");
+
+  if (!results) return;
+
+  const category =
+    document.getElementById("category")?.value || "Product";
+
+  let html = `
+    <div class="result-card">
+
+      <h2>
+        ${category.charAt(0).toUpperCase() + category.slice(1)}
+        Opportunities
+      </h2>
+
+      <p>Sorted by ${type}.</p>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:15px 0;">
+
+        <button
+          type="button"
+          class="button primary"
+          onclick="sortProfitScout('profit')">
+          Highest Profit
+        </button>
+
+        <button
+          type="button"
+          class="button primary"
+          onclick="sortProfitScout('demand')">
+          Highest Demand
+        </button>
+
+        <button
+          type="button"
+          class="button primary"
+          onclick="sortProfitScout('margin')">
+          Highest Margin
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  sorted.forEach(product => {
+
+    const profit =
+      product.sell - product.buy;
+
+    const margin =
+      (profit / product.sell) * 100;
+
+    const opportunityScore =
+      Math.round(
+        product.demand * 0.5 +
+        Math.min(margin, 100) * 0.3 +
+        (product.competition === "Low"
+          ? 20
+          : product.competition === "Medium"
+            ? 12
+            : 6)
+      );
+
+    const monthlySales =
+      Math.max(10, Math.round(product.demand * 2.5));
+
+    const monthlyProfit =
+      Math.round(monthlySales * profit);
+
+    html += `
+      <div class="result-card">
+
+        <h2>${product.name}</h2>
+
+        <p><strong>Opportunity Score:</strong> ${opportunityScore}/100</p>
+
+        <p><strong>Buy:</strong> $${product.buy.toFixed(2)}</p>
+
+        <p><strong>Sell:</strong> $${product.sell.toFixed(2)}</p>
+
+        <p><strong>Profit:</strong> $${profit.toFixed(2)}</p>
+
+        <p><strong>Margin:</strong> ${Math.round(margin)}%</p>
+
+        <p><strong>Demand:</strong> ${product.demand}/100</p>
+
+        <p><strong>Competition:</strong> ${product.competition}</p>
+
+        <hr>
+
+        <p>
+          <strong>Estimated Monthly Profit:</strong>
+          $${monthlyProfit.toLocaleString()}
+        </p>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;">
+
+          <button
+            type="button"
+            class="button primary"
+            onclick="saveOpportunity('${product.name.replace(/'/g, "\\'")}')">
+            Save Opportunity
+          </button>
+
+          <button
+            type="button"
+            class="button primary"
+            onclick="researchProduct('${product.name.replace(/'/g, "\\'")}')">
+            Research Product
+          </button>
+
+        </div>
+
+      </div>
+    `;
+  });
+
+  results.innerHTML = html;
+}
+
+
+/* ---------- PRODUCT RESEARCH ---------- */
+
+function researchProduct(productName) {
+
+  const searchURL =
+    "https://www.google.com/search?q=" +
+    encodeURIComponent(
+      productName +
+      " wholesale supplier Amazon selling price"
+    );
+
+  window.open(searchURL, "_blank");
+}
+
+
+/* ---------- REPLACE THE ORIGINAL SCOUT FUNCTION ---------- */
+
+window.scoutProducts = upgradedScoutProducts;
