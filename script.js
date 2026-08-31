@@ -806,3 +806,460 @@ function researchProduct(productName) {
 /* ---------- REPLACE THE ORIGINAL SCOUT FUNCTION ---------- */
 
 window.scoutProducts = upgradedScoutProducts;
+/* =========================================================
+   PROFITSCOUT RESEARCH + ROI UPGRADE
+   ========================================================= */
+
+(function () {
+  "use strict";
+
+  function getProductName(button) {
+    let current = button;
+
+    for (let i = 0; i < 8 && current; i++) {
+      const heading = current.querySelector("h1, h2, h3, h4, h5");
+
+      if (heading && heading.textContent.trim()) {
+        return heading.textContent.trim();
+      }
+
+      current = current.parentElement;
+    }
+
+    return "Product Research";
+  }
+
+  function money(value) {
+    return "$" + Number(value || 0).toFixed(2);
+  }
+
+  function createResearchModal(productName) {
+    const old = document.getElementById("profitscoutResearchModal");
+    if (old) old.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "profitscoutResearchModal";
+
+    modal.innerHTML = `
+      <div class="ps-modal-overlay">
+        <div class="ps-modal">
+
+          <button class="ps-close" id="psCloseResearch">×</button>
+
+          <div class="ps-modal-title">
+            🔎 Product Research
+          </div>
+
+          <div class="ps-product-name">
+            ${productName}
+          </div>
+
+          <div class="ps-research-links">
+
+            <a target="_blank"
+              href="https://www.amazon.com/s?k=${encodeURIComponent(productName)}">
+              🛒 Search Amazon
+            </a>
+
+            <a target="_blank"
+              href="https://www.google.com/search?tbm=shop&q=${encodeURIComponent(productName)}">
+              🛍️ Compare Prices
+            </a>
+
+            <a target="_blank"
+              href="https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(productName)}">
+              📦 Search eBay
+            </a>
+
+            <a target="_blank"
+              href="https://www.walmart.com/search?q=${encodeURIComponent(productName)}">
+              🏪 Search Walmart
+            </a>
+
+          </div>
+
+          <hr>
+
+          <h3>💰 Profit & ROI Calculator</h3>
+
+          <label>
+            Selling Price
+            <input id="psSellPrice" type="number" step="0.01" value="16.99">
+          </label>
+
+          <label>
+            Product Cost
+            <input id="psBuyCost" type="number" step="0.01" value="3.50">
+          </label>
+
+          <label>
+            Amazon Referral Fee %
+            <input id="psReferral" type="number" step="0.1" value="15">
+          </label>
+
+          <label>
+            Shipping / Fulfillment Per Sale
+            <input id="psFulfillment" type="number" step="0.01" value="3.50">
+          </label>
+
+          <label>
+            Other Cost Per Sale
+            <input id="psOtherCost" type="number" step="0.01" value="0">
+          </label>
+
+          <label>
+            Estimated Monthly Sales
+            <input id="psMonthlySales" type="number" step="1" value="225">
+          </label>
+
+          <div class="ps-results">
+
+            <div>
+              <span>Amazon Fee</span>
+              <strong id="psAmazonFee">$0.00</strong>
+            </div>
+
+            <div>
+              <span>Net Profit / Sale</span>
+              <strong id="psNetProfit">$0.00</strong>
+            </div>
+
+            <div>
+              <span>Net Margin</span>
+              <strong id="psNetMargin">0%</strong>
+            </div>
+
+            <div>
+              <span>ROI</span>
+              <strong id="psROI">0%</strong>
+            </div>
+
+            <div>
+              <span>Estimated Monthly Profit</span>
+              <strong id="psMonthlyProfit">$0.00</strong>
+            </div>
+
+            <div class="ps-verdict" id="psVerdict">
+              RESEARCHING...
+            </div>
+
+          </div>
+
+          <p class="ps-disclaimer">
+            Estimates only. Actual Amazon fees, fulfillment, shipping,
+            returns, storage and other costs can vary.
+          </p>
+
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const sell = document.getElementById("psSellPrice");
+    const buy = document.getElementById("psBuyCost");
+    const referral = document.getElementById("psReferral");
+    const fulfillment = document.getElementById("psFulfillment");
+    const other = document.getElementById("psOtherCost");
+    const monthlySales = document.getElementById("psMonthlySales");
+
+    function calculate() {
+
+      const sellingPrice = Number(sell.value) || 0;
+      const buyCost = Number(buy.value) || 0;
+      const referralPercent = Number(referral.value) || 0;
+      const fulfillmentCost = Number(fulfillment.value) || 0;
+      const otherCost = Number(other.value) || 0;
+      const units = Number(monthlySales.value) || 0;
+
+      const amazonFee =
+        sellingPrice * (referralPercent / 100);
+
+      const netProfit =
+        sellingPrice -
+        buyCost -
+        amazonFee -
+        fulfillmentCost -
+        otherCost;
+
+      const margin =
+        sellingPrice > 0
+          ? (netProfit / sellingPrice) * 100
+          : 0;
+
+      const investment =
+        buyCost + fulfillmentCost + otherCost;
+
+      const roi =
+        investment > 0
+          ? (netProfit / investment) * 100
+          : 0;
+
+      const monthlyProfit =
+        netProfit * units;
+
+      document.getElementById("psAmazonFee").textContent =
+        money(amazonFee);
+
+      document.getElementById("psNetProfit").textContent =
+        money(netProfit);
+
+      document.getElementById("psNetMargin").textContent =
+        Math.round(margin) + "%";
+
+      document.getElementById("psROI").textContent =
+        Math.round(roi) + "%";
+
+      document.getElementById("psMonthlyProfit").textContent =
+        money(monthlyProfit);
+
+      const verdict =
+        document.getElementById("psVerdict");
+
+      if (netProfit <= 0) {
+
+        verdict.textContent = "🚫 AVOID";
+        verdict.className = "ps-verdict avoid";
+
+      } else if (roi >= 100 && margin >= 20) {
+
+        verdict.textContent = "🔥 STRONG OPPORTUNITY";
+        verdict.className = "ps-verdict strong";
+
+      } else if (roi >= 50 && margin >= 15) {
+
+        verdict.textContent = "✅ WORTH RESEARCHING";
+        verdict.className = "ps-verdict good";
+
+      } else {
+
+        verdict.textContent = "⚠️ MAYBE — RESEARCH MORE";
+        verdict.className = "ps-verdict maybe";
+      }
+    }
+
+    [
+      sell,
+      buy,
+      referral,
+      fulfillment,
+      other,
+      monthlySales
+    ].forEach(input => {
+      input.addEventListener("input", calculate);
+    });
+
+    calculate();
+
+    document
+      .getElementById("psCloseResearch")
+      .addEventListener("click", () => {
+        modal.remove();
+      });
+
+    modal
+      .querySelector(".ps-modal-overlay")
+      .addEventListener("click", function (event) {
+        if (event.target === this) {
+          modal.remove();
+        }
+      });
+  }
+
+  /* Intercept Research Product buttons before the old
+     Google-search action runs. */
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      const element = event.target.closest(
+        "button, a"
+      );
+
+      if (!element) return;
+
+      const text =
+        element.textContent
+          .trim()
+          .toLowerCase();
+
+      if (
+        text.includes("research product") ||
+        text.includes("research this product")
+      ) {
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        const productName =
+          getProductName(element);
+
+        createResearchModal(productName);
+      }
+
+    },
+    true
+  );
+
+
+  /* Add the research-modal styling */
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+
+    .ps-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 15, 30, 0.72);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .ps-modal {
+      position: relative;
+      width: min(560px, 100%);
+      max-height: 92vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 24px;
+      padding: 26px;
+      box-sizing: border-box;
+      box-shadow: 0 20px 60px rgba(0,0,0,.30);
+      font-family: Arial, sans-serif;
+    }
+
+    .ps-close {
+      position: absolute;
+      right: 18px;
+      top: 12px;
+      border: 0;
+      background: transparent;
+      font-size: 34px;
+      cursor: pointer;
+      color: #555;
+    }
+
+    .ps-modal-title {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      padding-right: 35px;
+    }
+
+    .ps-product-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #596275;
+    }
+
+    .ps-research-links {
+      display: grid;
+      gap: 10px;
+    }
+
+    .ps-research-links a {
+      display: block;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #6754e9;
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .ps-modal hr {
+      border: 0;
+      border-top: 1px solid #ddd;
+      margin: 24px 0;
+    }
+
+    .ps-modal h3 {
+      margin-bottom: 15px;
+    }
+
+    .ps-modal label {
+      display: block;
+      font-weight: 700;
+      margin: 13px 0;
+      color: #374151;
+    }
+
+    .ps-modal input {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 6px;
+      padding: 13px;
+      border: 1px solid #ccd2dc;
+      border-radius: 10px;
+      font-size: 17px;
+    }
+
+    .ps-results {
+      margin-top: 22px;
+      border-radius: 16px;
+      background: #f4f5fb;
+      padding: 16px;
+    }
+
+    .ps-results > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .ps-results > div:last-child {
+      border-bottom: 0;
+    }
+
+    .ps-verdict {
+      display: block !important;
+      text-align: center;
+      font-size: 21px;
+      font-weight: 900;
+      margin-top: 10px;
+      padding: 14px;
+      border-radius: 12px;
+    }
+
+    .ps-verdict.strong {
+      background: #d9f7df;
+      color: #12652b;
+    }
+
+    .ps-verdict.good {
+      background: #e2f4ff;
+      color: #075985;
+    }
+
+    .ps-verdict.maybe {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .ps-verdict.avoid {
+      background: #ffe0e0;
+      color: #9b1c1c;
+    }
+
+    .ps-disclaimer {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.5;
+      margin-top: 16px;
+    }
+
+  `;
+
+  document.head.appendChild(style);
+
+})();
